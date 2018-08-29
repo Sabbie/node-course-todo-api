@@ -1,4 +1,4 @@
-const expect = require('expect');
+const expect = require('expect'); // asumption library
 const request = require('supertest'); // express test library
 
 const {app} = require('./../server');  // './' relative path '../' going up one level
@@ -41,7 +41,7 @@ describe('POST /todos test', () => {
     // Test 2
     it('should not create todo with invalid body data', (done) => {
         // the invalid body data is here an empty object
-
+        
         // supertest
         request(app)
             .post('/todos')
@@ -49,9 +49,10 @@ describe('POST /todos test', () => {
             .expect(400) // expect HTTP status 400
             .end((err, res) => {
                 if (err) {
+                 
                     return done(err);
                 }
-
+                
                 // if the assumptions of the http request are correct (so the request has 400 status), check if the DB is still empty
                 Todo.find().then((todos) => {
                     expect(todos.length).toBe(0);
