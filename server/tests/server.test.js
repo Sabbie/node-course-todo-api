@@ -4,12 +4,20 @@ const request = require('supertest'); // express test library
 const {app} = require('./../server');  // './' relative path '../' going up one level
 const {Todo} = require('./../models/todo');
 
-// clear the database before each test
+const todos = [{
+    "text" : "first test todo"
+}, {
+    "text" : "second test todo"
+}];
+
+// clear the database before each test and populate it with the test todos
 beforeEach((done) => {
-    Todo.remove({}).then(() => done());
-})
+    Todo.remove({}).then(() => {
+        return Todo.insertMany(todos); // return to chain the promises
+    }).then(() => done());
+});
 
-
+// POST route tests
 describe('POST /todos test', () => {
     // Test 1
     it('should create a new todo', (done) => { // async test ==> use 'done'
@@ -29,7 +37,7 @@ describe('POST /todos test', () => {
                 }
                 
                 // if the http post request was succesfull, we still need to check if the todo is added in the DB
-                Todo.find().then((todos) => {
+                Todo.find({text}).then((todos) => {
                     expect(todos.length).toBe(1);
                     expect(todos[0].text).toBe(text);
                     done();
@@ -55,9 +63,23 @@ describe('POST /todos test', () => {
                 
                 // if the assumptions of the http request are correct (so the request has 400 status), check if the DB is still empty
                 Todo.find().then((todos) => {
-                    expect(todos.length).toBe(0);
+                    expect(todos.length).toBe(2);
                     done();
                 }).catch((e) => done(e));
             });
+    });
+});
+
+// GET route tests
+describe('GET /todos', () => {
+    it('should get all todos', (done) => {
+        //supertest
+        request(app)
+            .get('/todos')
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.todos.length).toBe(2);
+            })
+            .end(done); // we don't need a callback function in this 'end' because we're not doing anything asynchronous
     });
 });
