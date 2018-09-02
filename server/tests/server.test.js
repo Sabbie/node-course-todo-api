@@ -4,10 +4,14 @@ const request = require('supertest'); // express test library
 const {app} = require('./../server');  // './' relative path '../' going up one level
 const {Todo} = require('./../models/todo');
 
+const {ObjectID} = require('mongodb');
+
 const todos = [{
-    "text" : "first test todo"
+    _id: new ObjectID(),
+    text : "first test todo"
 }, {
-    "text" : "second test todo"
+    _id: new ObjectID(),
+    text : "second test todo"
 }];
 
 // clear the database before each test and populate it with the test todos
@@ -81,5 +85,33 @@ describe('GET /todos', () => {
                 expect(res.body.todos.length).toBe(2);
             })
             .end(done); // we don't need a callback function in this 'end' because we're not doing anything asynchronous
+    });
+});
+
+describe('GET /todos/:id', () => {
+    it('should return todo doc', (done) => {
+        // supertest
+        request(app)
+            .get(`/todos/${todos[0]._id.toHexString()}`) // toHexString converts the objectID to a string
+            .expect(200) // expect http status to be 200
+            .expect((res) => {
+                expect(res.body.todo.text).toBe(todos[0].text)
+            })
+            .end(done);
+    });
+
+    it('should return 404 if todo not found', (done) => {
+        var hexId = new ObjectID().toHexString();
+        request(app)
+            .get(`/todos/${hexId}`)
+            .expect(404)
+            .end(done);
+    });
+
+    it('should return 404 for non-object ids', (done) => {
+        request(app)
+            .get('/todos/123')
+            .expect(404)
+            .end(done);
     });
 });
