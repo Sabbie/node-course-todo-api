@@ -1,3 +1,5 @@
+const _ = require('lodash');
+
 const express = require('express');
 const bodyParser = require('body-parser');
 
@@ -71,6 +73,37 @@ app.delete('/todos/:id', (req, res) => {
         res.status(400).send();
     });
 });
+
+
+app.patch('/todos/:id', (req, res) => {
+    let id = req.params.id;
+    // only get the relevant properties of the object inside the req.body
+    let body = _.pick(req.body, ['text', 'completed']); // _ stores lodash utilities
+
+    if (!ObjectID.isValid(id)) {
+        return res.status(404).send(); // 404: not found
+    }
+    // check if completed is set to true
+    if (_.isBoolean(body.completed) && body.completed) {
+        body.completedAt = new Date().getTime(); // millisecond 1 jan 1970
+    } else {
+        body.completed = false;
+        body.completedAt = null;
+    }
+
+    Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => { // new : true to return the modified document rather than the original. defaults to false
+        if (!todo) {
+            return res.status(404).send();
+        }
+
+        res.send({todo});
+    }). catch((e) => {
+        res.status(400).send();
+    })
+})
+
+
+
 
 app.listen(port, () => {
     console.log(`Server started on port ${port}`);
