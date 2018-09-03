@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 mongoose.Promise = global.Promise; // Tell mongoose to use the ES6 built-in promises
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/TodoApp'); // no need for a callback with mongoose
+mongoose.connect(process.env.MONGODB_URI); // no need for a callback with mongoose
 
 module.exports = {mongoose};
 
