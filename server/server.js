@@ -106,6 +106,19 @@ app.patch('/todos/:id', (req, res) => {
 })
 
 
+// POST /users
+app.post('/users', (req, res) => {
+    let user = new User(_.pick(req.body, ['email', 'password']));
+
+    user.save().then(() => {
+        return user.generateAuthToken(); // this returns a promise with the token as the callback argument
+    }).then((token) => { // chain to the above returned promise
+        res.header('x-auth', token).send(user); // 'x-...' is a custom header that HTTP doesn't necessarily support
+    }).catch((e) => {
+        res.status(400).send(e);
+    })
+});
+
 
 
 app.listen(port, () => {
