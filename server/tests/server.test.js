@@ -5,23 +5,12 @@ const {app} = require('./../server');  // './' relative path '../' going up one 
 const {Todo} = require('./../models/todo');
 
 const {ObjectID} = require('mongodb');
+const {todos, populateTodos, users, populateUsers} = require('./seed/seed');
 
-const todos = [{
-    _id: new ObjectID(),
-    text : "first test todo"
-}, {
-    _id: new ObjectID(),
-    text : "second test todo",
-    completed : true,
-    completedAt : 333
-}];
+// clear the database before each test and populate it with the test todos and users
+beforeEach(populateTodos);
+beforeEach(populateUsers);
 
-// clear the database before each test and populate it with the test todos
-beforeEach((done) => {
-    Todo.remove({}).then(() => {
-        return Todo.insertMany(todos); // return to chain the promises
-    }).then(() => done());
-});
 
 // POST route tests
 describe('POST /todos test', () => {
