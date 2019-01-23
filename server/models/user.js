@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 
 const UserSchema = new mongoose.Schema({
     email: {
@@ -76,6 +77,25 @@ UserSchema.statics.findByToken = function(token){
         'tokens.access':'auth'
     });
 };
+
+
+// .pre adds middleware to the model, e.g. before we save a user to the DB, we can run a function
+UserSchema.pre('save', function(next) {
+    let user = this;
+
+    // check if the password of the user is modified when updating the user for example
+    // if it is not modified, we have the hashed password already. We may not hash the hashed password again! Only if it is a new password!
+    if (user.isModified('password')){
+        bcrypt.genSalt(10, (err, salt) => {
+            bcrypt.hash(user.password, salt, (err, hash) => {
+                user.password = hash;
+                next();
+            })
+        })
+    } else {
+        next();
+    }
+});
 
 // User model
 const User = mongoose.model('User', UserSchema);
