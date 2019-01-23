@@ -110,6 +110,7 @@ app.patch('/todos/:id', (req, res) => {
 
 
 // POST /users
+// signup
 app.post('/users', (req, res) => {
     let user = new User(_.pick(req.body, ['email', 'password']));
 

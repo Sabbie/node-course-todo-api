@@ -5,7 +5,7 @@ const {app} = require('./../server');  // './' relative path '../' going up one 
 const {Todo} = require('./../models/todo');
 
 const {ObjectID} = require('mongodb');
-const {todos, populateTodos, users, populateUsers} = require('./seed/seed');
+const { todos, populateTodos, users, populateUsers} = require('./seed/seed');
 
 // clear the database before each test and populate it with the test todos and users
 beforeEach(populateTodos);
