@@ -35,14 +35,14 @@ const UserSchema = new mongoose.Schema({
 // override the toJSON() method, because we don't want to send the password and tokens properties back
 UserSchema.methods.toJSON = function() {
     var user = this;
-    var userObject = user.toObject();
+    var userObject = user.toObject(); // converts a mongoose object to a regular object (no ._v property e.g.)
 
     return _.pick(userObject,['_id','email']);
 };
 
 // create instance method via the .methods property
 UserSchema.methods.generateAuthToken = function() {
-    var user = this;
+    var user = this; // instance methods get called with the individual document (this), lowercase user
     var access = 'auth';
     var token = jwt.sign({_id : user._id.toHexString(), access}, 'abc123').toString();
 
@@ -50,6 +50,30 @@ UserSchema.methods.generateAuthToken = function() {
     
     return user.save().then(() => { // succes case of the promise
         return token; // this will return token as the argument in the next .then succes case
+    });
+};
+
+
+// .statics => model methods
+UserSchema.statics.findByToken = function(token){
+    var User = this; // model methods get called with the model (this), uppercase User
+    var decoded;
+
+    try {
+        decoded = jwt.verify(token, 'abc123');
+    } catch(e) {
+        // error case
+        // return new Promise((resolve, reject) => {
+        //     reject();
+        // });
+        // shorthand
+        return Promise.reject();
+    }
+    // succes case
+    return User.findOne({
+        '_id': decoded._id,
+        'tokens.token': token,
+        'tokens.access':'auth'
     });
 };
 
