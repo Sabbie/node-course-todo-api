@@ -3,6 +3,7 @@ const request = require('supertest'); // express test library
 
 const {app} = require('./../server');  // './' relative path '../' going up one level
 const {Todo} = require('./../models/todo');
+const {User} = require('./../models/user');
 
 const {ObjectID} = require('mongodb');
 const { todos, populateTodos, users, populateUsers} = require('./seed/seed');
@@ -187,5 +188,73 @@ describe('PATCH /todos/:id', () => {
             .end(done);
         // 200
         // text is changed, completed is false and completedAt is null .toBeFalsy
+    });
+});
+
+describe('GET /users/me', () => {
+
+    it('should return user if authenticated', (done) => {
+        request(app)
+            .get('/users/me')
+            .set('x-auth', users[0].tokens[0].token)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body._id).toBe(users[0]._id.toHexString());
+                expect(res.body.email).toBe(users[0].email);
+            })
+            .end(done);
+    });
+
+    it('should return 401 if not authenticated', (done) => {
+        request(app)
+            .get('/users/me')
+            .expect(401)
+            .expect((res) => {
+                expect(res.body).toEqual({});
+            })
+            .end(done);
+    });
+
+});
+
+describe('Post /users', () => {
+
+    it('should create a user', (done) => {
+        request(app)
+            .post('/users')
+            .send({ email : 'example@example.com', password : '123456'})
+            .expect(200)
+            .expect((res) => {
+                expect(res.headers['x-auth']).toBeTruthy();
+                expect(res.body._id).toBeTruthy();
+                expect(res.body.email).toBe('example@example.com');
+            })
+            .end((err) => { // custom done callback because we need to async check if user is added in DB
+                if (err) { // err comes from above assertions
+                    return done(err);
+                }
+
+                User.findOne({ email : 'example@example.com'}).then((user) => {
+                    expect(user).toBeTruthy();
+                    expect(user.password).not.toBe('123456'); // because it should be hashed in the db
+                    done();
+                }) ;
+            });
+    });
+
+    it('should return validation errors if request invalid', (done) => {
+        request(app)
+            .post('/users')
+            .send({ email : 'exampample.com', password : '456'}) // not a mail, to hort password
+            .expect(400)
+            .end(done);
+    });
+
+    it('should not create user if email in use', (done) => {
+        request(app)
+            .post('/users')
+            .send({ email : 'cedric@example.com', password : '123456'}) // mail already taken
+            .expect(400)
+            .end(done);
     });
 });
