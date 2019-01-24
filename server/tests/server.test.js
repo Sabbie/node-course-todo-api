@@ -253,7 +253,7 @@ describe('Post /users', () => {
     it('should not create user if email in use', (done) => {
         request(app)
             .post('/users')
-            .send({ email : 'cedric@example.com', password : '123456'}) // mail already taken
+            .send({ email : users[0].email, password : '123456'}) // mail already taken
             .expect(400)
             .end(done);
     });
